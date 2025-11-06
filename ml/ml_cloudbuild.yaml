@@ -1,0 +1,29 @@
+steps:
+  # Step 1: Build container image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "asia-south1-docker.pkg.dev/rmi-data-engineering-project/dataflow-images/ml-salary-prediction:latest",
+        ".",
+      ]
+
+  # Step 2: Push container image to Google Artifact Registry.
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "asia-south1-docker.pkg.dev/rmi-data-engineering-project/dataflow-images/ml-salary-prediction:latest",
+      ]
+
+  # Step 3: Launch the Dataflow job using the gcloud CLI (Flex Template).
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        gcloud dataflow flex-template run "ml-salary-prediction-$(date +%Y%m%d-%H%M%S)" \
+          --project=rmi-data-engineering-project \
+          --region=asia-south1 \
+          --image="asia-south1-docker.pkg.dev/rmi-data-engineering-project/dataflow-images/ml-salary-prediction:latest"

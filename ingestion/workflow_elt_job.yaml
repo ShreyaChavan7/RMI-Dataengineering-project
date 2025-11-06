@@ -1,0 +1,80 @@
+main:
+  steps:
+    - init:
+        assign:
+          - projectId: "rmi-data-engineering-project"
+          - location: "asia-south1"
+          - query: |
+              CREATE OR REPLACE TABLE
+                `rmi-data-engineering-project.rmi_processed.preprocessed_job_posting` AS
+              SELECT
+                GENERATE_UUID() AS job_id,
+                r.job_title,
+                r.company_name,
+                r.location,
+                r.posted_date,
+                r.salary_max,
+                m.min_salary,
+                IFNULL((r.salary_max + m.min_salary) / 2, r.salary_max) AS avg_salary_estimate,
+                r.job_description,
+                r.ingest_timestamp,
+                FORMAT_DATE('%Y-%m', r.posted_date) AS posting_month,
+                CURRENT_TIMESTAMP() AS processed_time
+              FROM
+                `rmi-data-engineering-project.rmi_raw.raw_job_posting` r
+              LEFT JOIN
+                `rmi-data-engineering-project.rmi_raw.min_wage` m
+              ON
+                r.job_title = m.job_title
+                AND FORMAT_DATE('%Y-%m', r.posted_date) = FORMAT_DATE('%Y-%m', m.month)
+
+    - run_query:
+        call: googleapis.bigquery.v2.jobs.insert
+        args:
+          projectId: ${projectId}
+          body:
+            configuration:
+              query:
+                query: ${query}
+                useLegacySql: false
+        result: bq_job
+
+    - wait_before_poll:
+        call: sys.sleep
+        args:
+          seconds: 5
+
+    - poll_job:
+        call: googleapis.bigquery.v2.jobs.get
+        args:
+          projectId: ${projectId}
+          location: ${location}
+          jobId: ${bq_job.jobReference.jobId}
+        result: job_status
+
+    - extract_error:
+        switch:
+          - condition: ${"errorResult" in job_status.status}
+            assign:
+              - error_result: ${job_status.status.errorResult}
+          - condition: ${not("errorResult" in job_status.status)}
+            assign:
+              - error_result: null
+
+    - check_status:
+        switch:
+          - condition: ${job_status.status.state == "DONE" and error_result == null}
+            next: success
+          - condition: ${error_result != null}
+            raise: ${error_result}
+          - condition: ${job_status.status.state != "DONE"}
+            next: retry_wait
+
+    - retry_wait:
+        call: sys.sleep
+        args:
+          seconds: 3
+        next: poll_job
+
+    - success:
+        return: ${"BigQuery job completed successfully!"}

@@ -1,0 +1,31 @@
+steps:
+  # Step 1: Build the container image for Dataflow pipeline.
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "asia-south1-docker.pkg.dev/rmi-data-engineering-project/dataflow-images/dataflow-pubsub-windowing:latest",
+        ".",
+      ]
+
+  # Step 2: Push the container image to Google Artifact Registry.
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "asia-south1-docker.pkg.dev/rmi-data-engineering-project/dataflow-images/dataflow-pubsub-windowing:latest",
+      ]
+
+  # Step 3: Launch the Dataflow job using the gcloud CLI (Flex Template).
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        gcloud dataflow flex-template run "job-posting-ingestion-$(date +%Y%m%d-%H%M%S)" \
+          --project=rmi-data-engineering-project \
+          --region=asia-south1 \
+          --template-file-gcs-location=gs://rmi-dataflow-temp-bucket/templates/job_posting_ingestion.json \
+          --parameters=subscription=projects/rmi-data-engineering-project/subscriptions/job-posting-sub,output_table=rmi-data-engineering-project:job_dataset.raw_job_posting,temp_location=gs://rmi-dataflow-temp-bucket/temp/ \
+          --image=asia-south1-docker.pkg.dev/rmi-data-engineering-project/dataflow-images/dataflow-pubsub-windowing:latest

@@ -1,0 +1,17 @@
+# Use the official Beam SDK image from Artifact Registry 
+FROM us-docker.pkg.dev/apache-beam/containers/beam_python3.12_sdk:2.56.0
+
+# Set working directory inside the container
+WORKDIR /app
+
+# Copy pipeline code
+COPY df_ingestion_pipeline.py .
+
+# Copy requirements file if you have one
+COPY requirement.txt .
+
+# Install dependencies (Beam SDK image already has apache-beam)
+RUN pip install --no-cache-dir -r requirement.txt
+
+# Set Dataflow entrypoint
+ENTRYPOINT ["python", "df_ingestion_pipeline.py"]
