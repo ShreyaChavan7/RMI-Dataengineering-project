@@ -49,9 +49,9 @@ Ouput: rmi_ml.predicted_salary_per_month
     Cloud Workflows
     Artifact Registry
 
-Python 3.12
-Apache Beam SDK
-Pandas
+#### Python 3.12
+#### Apache Beam SDK
+#### Pandas
 
 ## Setup & Installation
 
