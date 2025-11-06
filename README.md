@@ -133,9 +133,9 @@ Target: GCP Workflow execution
 
 10 → hour (10 AM)
 
-- → any day of month
+* → any day of month
 
-- → any month
+* → any month
 
 1 → Monday
 
