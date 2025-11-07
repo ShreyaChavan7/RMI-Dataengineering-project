@@ -7,11 +7,11 @@ It covers ingestion, transformation (ELT), and salary prediction pipelines using
 
 ### Part 1:
 
-Name: Ingestion Pipeline
-Description:
+**Name:** Ingestion Pipeline
+**Description:**
 This streaming Dataflow pipeline ingests real-time job posting data from a Pub/Sub topic into BigQuery using Apache Beam.
 
-Components:
+**Components:**
 
 beam.io.ReadFromPubSub
 
@@ -21,22 +21,22 @@ beam.ParDo: for JSON parsing
 
 beam.io.WriteToBigQuery: for loading data into rmi_raw.raw_job_posting
 
-Output Table:
+**Output Table:**
 rmi_raw.raw_job_posting
 
 ### Part 2:
 
-Name:Enrichment (ELT SQL)
-Description: Joins raw_job_posting with min_wage data to compute enhanced features (e.g., average salary).
-Output Table: rmi_processed.preprocessed_job_posting
+**Name:** Enrichment (ELT SQL)
+**Description:** Joins raw_job_posting with min_wage data to compute enhanced features (e.g., average salary).
+**Output Table:** rmi_processed.preprocessed_job_posting
 
 The SQL transformation is triggered via GCP Workflows, which runs a BigQuery job.
 
 ### Part 3:
 
-Name:ML Prediction Pipeline
-Description: Reads preprocessed data, runs an ML model (predict_salary_of_job) to estimate salary per job title per month.
-Ouput: rmi_ml.predicted_salary_per_month
+**Name:** ML Prediction Pipeline
+**Description:** Reads preprocessed data, runs an ML model (predict_salary_of_job) to estimate salary per job title per month.
+**Ouput:** rmi_ml.predicted_salary_per_month
 
 ## Tech Stack
 
